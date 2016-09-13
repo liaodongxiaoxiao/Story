@@ -17,7 +17,7 @@ public class Story {
     @Column(name = "content")
     private String content;
     @Column(name = "date_time")
-    private Date date_time;
+    private String date_time;
     @Column(name = "favorite_flag")
     private String favorite_flag;
     @Column(name = "favorite_time")
@@ -47,11 +47,11 @@ public class Story {
         this.content = content;
     }
 
-    public Date getDate_time() {
+    public String getDate_time() {
         return date_time;
     }
 
-    public void setDate_time(Date date_time) {
+    public void setDate_time(String date_time) {
         this.date_time = date_time;
     }
 

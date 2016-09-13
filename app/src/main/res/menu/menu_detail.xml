@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.ldxx.story.MainActivity">
+    <item
+        android:id="@+id/text_size_normal"
+        android:orderInCategory="100"
+        android:title="@string/action_normal"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/text_size_middle"
+        android:orderInCategory="100"
+        android:title="@string/action_middle"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/text_size_large"
+        android:orderInCategory="100"
+        android:title="@string/action_large"
+        app:showAsAction="never" />
+</menu>

@@ -13,8 +13,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
@@ -31,7 +29,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class CollectionActivity extends AppCompatActivity {
+
     private static final String TAG = "MainActivity";
     DbManager.DaoConfig daoConfig = new DbManager.DaoConfig()
             .setDbName("story.db");
@@ -42,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PAGE_SIZE = 10;
     private int pageNum = 0;
 
-    private ResultHandler handler = new ResultHandler(MainActivity.this);
+    private ResultHandler handler = new ResultHandler(CollectionActivity.this);
 
     private ProgressDialog dialog;
 
@@ -59,14 +58,13 @@ public class MainActivity extends AppCompatActivity {
     private void loadStory() {
         pageNum++;
         //显示ProgressDialog
-        dialog = ProgressDialog.show(MainActivity.this, "Loading...", "Please wait...", true, false);
+        dialog = ProgressDialog.show(CollectionActivity.this, "Loading...", "Please wait...", true, false);
         final Message msg = new Message();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    List<Story> data = db.selector(Story.class).where("favorite_flag", "=", "0")
-                            .or("favorite_flag", "=", null).offset((pageNum - 1) * PAGE_SIZE)
+                    List<Story> data = db.selector(Story.class).where("favorite_flag", "=", "1").offset((pageNum - 1) * PAGE_SIZE)
                             .limit(PAGE_SIZE).findAll();
                     if (data != null && !data.isEmpty()) {
                         msg.what = 1;
@@ -87,16 +85,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class ResultHandler extends Handler {
-        private WeakReference<MainActivity> re;
+        private WeakReference<CollectionActivity> re;
 
-        ResultHandler(MainActivity a) {
+        ResultHandler(CollectionActivity a) {
             re = new WeakReference<>(a);
         }
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            MainActivity a = re.get();
+            CollectionActivity a = re.get();
             if (msg.what == 1) {
                 List<Story> data = (List<Story>) msg.obj;
                 a.setDate(data);
@@ -140,8 +138,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void SimpleOnItemClick(BaseQuickAdapter bAdapter, View view, int position) {
                 //toastUtil.showToast(adapter.getData().get(position).getName(), Toast.LENGTH_SHORT);
-                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+                Intent intent = new Intent(CollectionActivity.this, DetailActivity.class);
                 intent.putExtra("id", adapter.getData().get(position).getPid());
+                intent.putExtra("flag", 1);
                 startActivity(intent);
             }
         });
@@ -163,26 +162,4 @@ public class MainActivity extends AppCompatActivity {
         list = (RecyclerView) findViewById(R.id.list);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(MainActivity.this, CollectionActivity.class));
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
