@@ -1,29 +1,38 @@
 package com.ldxx.story;
 
-import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.BaseViewHolder;
+import com.chad.library.adapter.base.callback.ItemDragAndSwipeCallback;
 import com.chad.library.adapter.base.listener.OnItemClickListener;
+import com.chad.library.adapter.base.listener.OnItemDragListener;
 import com.ldxx.story.adapter.StoryAdapter;
 import com.ldxx.story.bean.Story;
 
 import org.xutils.DbManager;
+import org.xutils.db.Selector;
+import org.xutils.db.sqlite.WhereBuilder;
 import org.xutils.ex.DbException;
 import org.xutils.x;
 
@@ -39,12 +48,17 @@ public class MainActivity extends AppCompatActivity {
     private StoryAdapter adapter;
     private List<Story> data = new ArrayList<>();
     private DbManager db;
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 30;
     private int pageNum = 0;
 
     private ResultHandler handler = new ResultHandler(MainActivity.this);
 
-    private ProgressDialog dialog;
+    //private ProgressDialog dialog;
+
+    private ItemTouchHelper mItemTouchHelper;
+    private ItemDragAndSwipeCallback mItemDragAndSwipeCallback;
+
+    private boolean isDesc = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,15 +73,24 @@ public class MainActivity extends AppCompatActivity {
     private void loadStory() {
         pageNum++;
         //显示ProgressDialog
-        dialog = ProgressDialog.show(MainActivity.this, "Loading...", "Please wait...", true, false);
+        //dialog = ProgressDialog.show(MainActivity.this, "Loading...", "Please wait...", true, false);
         final Message msg = new Message();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    List<Story> data = db.selector(Story.class).where("favorite_flag", "=", "0")
-                            .or("favorite_flag", "=", null).offset((pageNum - 1) * PAGE_SIZE)
-                            .limit(PAGE_SIZE).findAll();
+                    Selector<Story> selector =
+                            db.selector(Story.class).where("favorite_flag", "=", "0")
+                                    .or("favorite_flag", "=", null).offset((pageNum - 1) * PAGE_SIZE)
+                                    .limit(PAGE_SIZE);
+                    if (!isDesc) {
+                        selector.orderBy("date_time", false);
+                    } else {
+                        selector.orderBy("date_time");
+                    }
+
+                    List<Story> data = selector.findAll();
+
                     if (data != null && !data.isEmpty()) {
                         msg.what = 1;
                         msg.obj = data;
@@ -108,9 +131,9 @@ public class MainActivity extends AppCompatActivity {
                 adapter.loadComplete();
             }
 
-            if (dialog != null && dialog.isShowing()) {
+            /*if (dialog != null && dialog.isShowing()) {
                 dialog.dismiss();
-            }
+            }*/
         }
     }
 
@@ -121,11 +144,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void bindEvent() {
         adapter = new StoryAdapter(data);
+
+        mItemDragAndSwipeCallback = new ItemDragAndSwipeCallback(adapter);
+        mItemTouchHelper = new ItemTouchHelper(mItemDragAndSwipeCallback);
+        mItemTouchHelper.attachToRecyclerView(list);
+
+        mItemDragAndSwipeCallback.setDragMoveFlags(ItemTouchHelper.RIGHT);
+        mItemDragAndSwipeCallback.setSwipeMoveFlags(ItemTouchHelper.END);
+        //adapter.enableSwipeItem();
+        //adapter.setOnItemSwipeListener(onItemSwipeListener);
+        adapter.enableDragItem(mItemTouchHelper);
+        adapter.setOnItemDragListener(listener);
+
+
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
 
-        list.setLayoutManager(layoutManager);
-        list.setAdapter(adapter);
         View view = getLayoutInflater().inflate(R.layout.load_more,
                 (ViewGroup) list.getParent(), false);
         adapter.setLoadingView(view);
@@ -145,6 +179,9 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        list.setLayoutManager(layoutManager);
+        list.setAdapter(adapter);
     }
 
     private void initView() {
@@ -155,8 +192,9 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                isDesc = !isDesc;
+                pageNum = 0;
+                loadStory();
             }
         });
 
@@ -185,4 +223,84 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
+    private OnItemDragListener listener = new OnItemDragListener() {
+        @Override
+        public void onItemDragStart(RecyclerView.ViewHolder viewHolder, int pos) {
+            Log.e(TAG, "drag start");
+            BaseViewHolder holder = ((BaseViewHolder) viewHolder);
+            holder.setTextColor(R.id.title, Color.WHITE);
+            ((CardView) viewHolder.itemView).setCardBackgroundColor(
+                    ContextCompat.getColor(MainActivity.this, R.color.color_light_blue));
+        }
+
+        @Override
+        public void onItemDragMoving(RecyclerView.ViewHolder source, int from, RecyclerView.ViewHolder target, int to) {
+            Log.e(TAG, "move from: " + source.getAdapterPosition() + " to: " + target.getAdapterPosition());
+        }
+
+        @Override
+        public void onItemDragEnd(RecyclerView.ViewHolder viewHolder, final int pos) {
+            Log.e(TAG, "drag end");
+            //viewHolder.itemView.setVisibility(View.GONE);
+            adapter.remove(pos);
+            new AlertDialog.Builder(MainActivity.this).setTitle("提醒").setMessage("确定要删除这个故事吗？")
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        public void onClick(
+                                DialogInterface dialog,
+                                int which) {
+                            Story story = adapter.getItem(pos);
+                            try {
+                                db.delete(Story.class, WhereBuilder.b("pid", "=", story.getPid()));
+
+                                Toast.makeText(MainActivity.this, "删除成功", Toast.LENGTH_SHORT).show();
+                            } catch (DbException e) {
+                                Toast.makeText(MainActivity.this, "删除失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        public void onClick(
+                                DialogInterface dialog,
+                                int which) {
+                            // 这里点击取消之后可以进行的操作
+                        }
+                    }).show();
+            //BaseViewHolder holder = ((BaseViewHolder) viewHolder);
+            //holder.setTextColor(R.id.title, Color.BLACK);
+            //((CardView) viewHolder.itemView).setCardBackgroundColor(Color.WHITE);
+        }
+    };
+
+    /*private OnItemSwipeListener onItemSwipeListener = new OnItemSwipeListener() {
+        @Override
+        public void onItemSwipeStart(RecyclerView.ViewHolder viewHolder, int pos) {
+            Log.d(TAG, "view swiped start: " + pos);
+            BaseViewHolder holder = ((BaseViewHolder) viewHolder);
+            holder.setTextColor(R.id.title, Color.WHITE);
+            ((CardView) viewHolder.itemView).setCardBackgroundColor(Color.YELLOW);
+        }
+
+        @Override
+        public void clearView(RecyclerView.ViewHolder viewHolder, int pos) {
+            Log.d(TAG, "View reset: " + pos);
+            BaseViewHolder holder = ((BaseViewHolder) viewHolder);
+            holder.setTextColor(R.id.title, Color.BLACK);
+            ((CardView) viewHolder.itemView).setCardBackgroundColor(Color.WHITE);
+        }
+
+        @Override
+        public void onItemSwiped(RecyclerView.ViewHolder viewHolder, int pos) {
+            Log.d(TAG, "View Swiped: " + pos);
+        }
+
+        @Override
+        public void onItemSwipeMoving(Canvas canvas, RecyclerView.ViewHolder viewHolder, float dX, float dY, boolean isCurrentlyActive) {
+            canvas.drawColor(ContextCompat.getColor(MainActivity.this, R.color.color_light_blue));
+            canvas.drawText("Just some text", 0, 40, paint);
+        }
+    };*/
+
+
 }

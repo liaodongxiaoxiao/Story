@@ -1,5 +1,6 @@
 package com.ldxx.story.adapter;
 
+import com.chad.library.adapter.base.BaseItemDraggableAdapter;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.ldxx.story.R;
@@ -12,7 +13,7 @@ import java.util.List;
  * on 2016/9/12.
  */
 
-public class StoryAdapter extends BaseQuickAdapter<Story> {
+public class StoryAdapter extends BaseItemDraggableAdapter<Story> {
     public StoryAdapter(List<Story> data) {
         super(R.layout.item_menu_list, data);
     }
