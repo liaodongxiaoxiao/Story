@@ -4,12 +4,17 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.ScrollingView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Layout;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.ldxx.story.bean.Story;
@@ -20,6 +25,7 @@ import org.xutils.ex.DbException;
 import org.xutils.x;
 
 public class DetailActivity extends AppCompatActivity {
+    private static final String TAG = "DetailActivity";
 
     private TextView content;
     private ActionBar actionBar;
@@ -85,6 +91,37 @@ public class DetailActivity extends AppCompatActivity {
         SharedPreferences p = this.getPreferences(MODE_PRIVATE);
         float fontSize = p.getFloat(FONT_SIZE, 16);
         content.setTextSize(fontSize);
+
+        ViewTreeObserver vto = content.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                ViewTreeObserver obs = content.getViewTreeObserver();
+                obs.removeOnGlobalLayoutListener(this);
+                int lines = content.getLineCount();
+                Log.e(TAG, "lines: " + lines);
+                int height = content.getHeight();
+                int scrollY = content.getScrollY();
+                Log.e(TAG, "height: "+height +"scrollY:"+scrollY);
+                Layout layout = content.getLayout();
+
+                int firstVisibleLineNumber = layout.getLineForVertical(scrollY);
+                int lastVisibleLineNumber = layout.getLineForVertical(height + scrollY);
+                Log.e(TAG, "onGlobalLayout: " + firstVisibleLineNumber + " " + lastVisibleLineNumber);
+
+            }
+        });
+
+        final ScrollView scrollView = (ScrollView) findViewById(R.id.content_detail);
+        content.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+            @Override
+            public void onScrollChanged() {
+                int y = scrollView.getScrollY();
+                Log.e(TAG, "onScrollChanged: " + y);
+            }
+        });
+
+        //content.setSc
     }
 
     private void collectionOrNot(View view) {
