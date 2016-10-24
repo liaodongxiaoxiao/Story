@@ -1,10 +1,8 @@
 package com.ldxx.story;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.view.ScrollingView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -19,6 +17,7 @@ import android.widget.TextView;
 
 import com.ldxx.story.bean.Story;
 import com.ldxx.story.utils.DateUtils;
+import com.ldxx.story.utils.SharedPreferencesUtils;
 
 import org.xutils.DbManager;
 import org.xutils.ex.DbException;
@@ -29,11 +28,12 @@ public class DetailActivity extends AppCompatActivity {
 
     private TextView content;
     private ActionBar actionBar;
-    public static final String FONT_SIZE = "font_size";
     private DbManager db;
     private Story story;
 
     private int flag;
+
+    private SharedPreferencesUtils utils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +41,8 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         String id = getIntent().getStringExtra("id");
         flag = getIntent().getIntExtra("flag", 0);
+        utils = new SharedPreferencesUtils(this);
+
         initDB();
         initView();
 
@@ -88,9 +90,7 @@ public class DetailActivity extends AppCompatActivity {
         });
         content = (TextView) findViewById(R.id.content);
 
-        SharedPreferences p = this.getPreferences(MODE_PRIVATE);
-        float fontSize = p.getFloat(FONT_SIZE, 16);
-        content.setTextSize(fontSize);
+        content.setTextSize(utils.getFontSize());
 
         ViewTreeObserver vto = content.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -174,10 +174,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void changeTextSize(float textSize) {
-        SharedPreferences p = this.getPreferences(MODE_PRIVATE);
-        SharedPreferences.Editor editor = p.edit();
-        editor.putFloat(FONT_SIZE, textSize);
-        editor.apply();
+        utils.saveFontSize(textSize);
         content.setTextSize(textSize);
     }
 }

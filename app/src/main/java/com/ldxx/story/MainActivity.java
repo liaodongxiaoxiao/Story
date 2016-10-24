@@ -29,6 +29,7 @@ import com.chad.library.adapter.base.listener.OnItemClickListener;
 import com.chad.library.adapter.base.listener.OnItemDragListener;
 import com.ldxx.story.adapter.StoryAdapter;
 import com.ldxx.story.bean.Story;
+import com.ldxx.story.utils.SharedPreferencesUtils;
 
 import org.xutils.DbManager;
 import org.xutils.db.Selector;
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private StoryAdapter adapter;
     private List<Story> data = new ArrayList<>();
     private DbManager db;
-    private static final int PAGE_SIZE = 30;
+    private static final int PAGE_SIZE = 50;
     private int pageNum = 0;
 
     private ResultHandler handler = new ResultHandler(MainActivity.this);
@@ -58,12 +59,16 @@ public class MainActivity extends AppCompatActivity {
     private ItemTouchHelper mItemTouchHelper;
     private ItemDragAndSwipeCallback mItemDragAndSwipeCallback;
 
-    private boolean isDesc = true;
+    private boolean isDesc;
+
+    private SharedPreferencesUtils utils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        utils = new SharedPreferencesUtils(this);
+        isDesc = utils.isDesc();
         initView();
         db = x.getDb(daoConfig);
         bindEvent();
@@ -83,11 +88,11 @@ public class MainActivity extends AppCompatActivity {
                             db.selector(Story.class).where("favorite_flag", "=", "0")
                                     .or("favorite_flag", "=", null).offset((pageNum - 1) * PAGE_SIZE)
                                     .limit(PAGE_SIZE);
-                    if (!isDesc) {
+                    /*if (!isDesc) {
                         selector.orderBy("date_time", false);
-                    } else {
+                    } else {*/
                         selector.orderBy("date_time");
-                    }
+                    //}
 
                     List<Story> data = selector.findAll();
 
@@ -193,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 isDesc = !isDesc;
+                utils.saveIsDesc(isDesc);
                 pageNum = 0;
                 loadStory();
             }
