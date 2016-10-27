@@ -1,39 +1,26 @@
 package com.ldxx.story;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.BaseViewHolder;
-import com.chad.library.adapter.base.callback.ItemDragAndSwipeCallback;
-import com.chad.library.adapter.base.listener.OnItemClickListener;
-import com.chad.library.adapter.base.listener.OnItemDragListener;
-import com.ldxx.story.adapter.StoryAdapter;
+import com.ldxx.story.adapter.StorySwipeAdapter;
 import com.ldxx.story.bean.Story;
 import com.ldxx.story.utils.SharedPreferencesUtils;
 
 import org.xutils.DbManager;
 import org.xutils.db.Selector;
-import org.xutils.db.sqlite.WhereBuilder;
 import org.xutils.ex.DbException;
 import org.xutils.x;
 
@@ -46,7 +33,8 @@ public class MainActivity extends AppCompatActivity {
     DbManager.DaoConfig daoConfig = new DbManager.DaoConfig()
             .setDbName("story.db");
     private RecyclerView list;
-    private StoryAdapter adapter;
+    //private StoryAdapter adapter;
+    private StorySwipeAdapter adapter;
     private List<Story> data = new ArrayList<>();
     private DbManager db;
     private static final int PAGE_SIZE = 50;
@@ -56,8 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
     //private ProgressDialog dialog;
 
-    private ItemTouchHelper mItemTouchHelper;
-    private ItemDragAndSwipeCallback mItemDragAndSwipeCallback;
+    //private ItemTouchHelper mItemTouchHelper;
+    //private ItemDragAndSwipeCallback mItemDragAndSwipeCallback;
 
     private boolean isDesc;
 
@@ -72,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         initView();
         db = x.getDb(daoConfig);
         bindEvent();
-
+        loadStory();
     }
 
     private void loadStory() {
@@ -127,13 +115,13 @@ public class MainActivity extends AppCompatActivity {
             MainActivity a = re.get();
             if (msg.what == 1) {
                 List<Story> data = (List<Story>) msg.obj;
-                a.setDate(data);
+                a.setData(data);
             } else if (msg.what == 0) {
                 Toast.makeText(a, "未查询到结果", Toast.LENGTH_SHORT).show();
-                adapter.loadComplete();
+                //adapter.loadComplete();
             } else {
                 Toast.makeText(a, "查询出错", Toast.LENGTH_SHORT).show();
-                adapter.loadComplete();
+                //adapter.loadComplete();
             }
 
             /*if (dialog != null && dialog.isShowing()) {
@@ -142,15 +130,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setDate(List<Story> data) {
+    private void setData(List<Story> data) {
         adapter.addData(data);
     }
 
 
     private void bindEvent() {
-        adapter = new StoryAdapter(data);
+        adapter = new StorySwipeAdapter(MainActivity.this,data);
 
-        mItemDragAndSwipeCallback = new ItemDragAndSwipeCallback(adapter);
+        /*mItemDragAndSwipeCallback = new ItemDragAndSwipeCallback(adapter);
         mItemTouchHelper = new ItemTouchHelper(mItemDragAndSwipeCallback);
         mItemTouchHelper.attachToRecyclerView(list);
 
@@ -159,12 +147,12 @@ public class MainActivity extends AppCompatActivity {
         //adapter.enableSwipeItem();
         //adapter.setOnItemSwipeListener(onItemSwipeListener);
         adapter.enableDragItem(mItemTouchHelper);
-        adapter.setOnItemDragListener(listener);
+        adapter.setOnItemDragListener(listener);*/
 
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-
+        /*
         View view = getLayoutInflater().inflate(R.layout.load_more,
                 (ViewGroup) list.getParent(), false);
         adapter.setLoadingView(view);
@@ -173,9 +161,9 @@ public class MainActivity extends AppCompatActivity {
             public void onLoadMoreRequested() {
                 loadStory();
             }
-        });
+        });*/
 
-        list.addOnItemTouchListener(new OnItemClickListener() {
+        /*list.addOnItemTouchListener(new OnItemClickListener() {
             @Override
             public void SimpleOnItemClick(BaseQuickAdapter bAdapter, View view, int position) {
                 //toastUtil.showToast(adapter.getData().get(position).getName(), Toast.LENGTH_SHORT);
@@ -183,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("id", adapter.getData().get(position).getPid());
                 startActivity(intent);
             }
-        });
+        });*/
 
         list.setLayoutManager(layoutManager);
         list.setAdapter(adapter);
@@ -231,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private OnItemDragListener listener = new OnItemDragListener() {
+    /*private OnItemDragListener listener = new OnItemDragListener() {
         @Override
         public void onItemDragStart(RecyclerView.ViewHolder viewHolder, int pos) {
             Log.e(TAG, "drag start");
@@ -277,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
             //holder.setTextColor(R.id.title, Color.BLACK);
             //((CardView) viewHolder.itemView).setCardBackgroundColor(Color.WHITE);
         }
-    };
+    };*/
 
     /*private OnItemSwipeListener onItemSwipeListener = new OnItemSwipeListener() {
         @Override
