@@ -17,6 +17,7 @@ import com.daimajia.swipe.SwipeLayout;
 import com.daimajia.swipe.adapters.RecyclerSwipeAdapter;
 import com.ldxx.story.R;
 import com.ldxx.story.bean.Story;
+import com.ldxx.story.utils.DateUtils;
 
 import java.util.List;
 
@@ -95,7 +96,7 @@ public class StorySwipeAdapter extends RecyclerSwipeAdapter<StorySwipeAdapter.Si
             }
         });
         viewHolder.title.setText(item.getTitle());
-        viewHolder.date.setText(item.getDate_time());
+        viewHolder.date.setText(DateUtils.dateToString(item.getDate_time()));
         mItemManger.bindView(viewHolder.itemView, position);
 
     }

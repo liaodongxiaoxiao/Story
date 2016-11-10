@@ -1,8 +1,10 @@
 package com.ldxx.story;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.ScrollingView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -25,7 +28,19 @@ import org.xutils.x;
 
 public class DetailActivity extends AppCompatActivity {
     private static final String TAG = "DetailActivity";
+    private static final String LINE = "LINE_KEY";
+    //当前最上边的行号
+    private int currentTopLine;
 
+    //单行行高
+    int lineHeight;
+    //本篇文章共多少行
+    int lines;
+    //当前可见范围能显示多少行
+    int perPageLine;
+
+    private ScrollView scrollView;
+    private ProgressBar bar;
     private TextView content;
     private ActionBar actionBar;
     private DbManager db;
@@ -66,6 +81,7 @@ public class DetailActivity extends AppCompatActivity {
                     actionBar.setTitle(story.getTitle());
                 }
                 content.setText(story.getContent());
+                currentTopLine = story.getTop_line();
             }
         } catch (DbException e) {
             e.printStackTrace();
@@ -88,6 +104,8 @@ public class DetailActivity extends AppCompatActivity {
                 collectionOrNot(view);
             }
         });
+        scrollView = (ScrollView) findViewById(R.id.content_detail);
+        bar = (ProgressBar) findViewById(R.id.bar);
         content = (TextView) findViewById(R.id.content);
 
         content.setTextSize(utils.getFontSize());
@@ -98,31 +116,74 @@ public class DetailActivity extends AppCompatActivity {
             public void onGlobalLayout() {
                 ViewTreeObserver obs = content.getViewTreeObserver();
                 obs.removeOnGlobalLayoutListener(this);
-                int lines = content.getLineCount();
+                lines = content.getLineCount();
                 Log.e(TAG, "lines: " + lines);
-                int height = content.getHeight();
-                int scrollY = content.getScrollY();
-                Log.e(TAG, "height: "+height +"scrollY:"+scrollY);
-                Layout layout = content.getLayout();
-
-                int firstVisibleLineNumber = layout.getLineForVertical(scrollY);
-                int lastVisibleLineNumber = layout.getLineForVertical(height + scrollY);
-                Log.e(TAG, "onGlobalLayout: " + firstVisibleLineNumber + " " + lastVisibleLineNumber);
+                lineHeight = content.getLineHeight();
+                perPageLine = scrollView.getHeight() / lineHeight;
+                scroll();
+                if(currentTopLine==0){
+                    setBarProgress(perPageLine);
+                }
 
             }
         });
 
-        final ScrollView scrollView = (ScrollView) findViewById(R.id.content_detail);
         content.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
             @Override
             public void onScrollChanged() {
                 int y = scrollView.getScrollY();
-                Log.e(TAG, "onScrollChanged: " + y);
+                int line = (int) Math.ceil((scrollView.getHeight() + y) / lineHeight);
+                currentTopLine = line - perPageLine;
+                setBarProgress(line);
             }
         });
 
         //content.setSc
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //currentTopLine = preferences.getInt(LINE, 0);
+        //Log.e(TAG, "onStart: " + currentTopLine);
+
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //SharedPreferences.Editor editor = preferences.edit();
+        //Log.e(TAG, "onStop: " + currentTopLine);
+        //editor.putInt(LINE, currentTopLine);
+        //editor.apply();
+        try {
+            story.setTop_line(currentTopLine);
+            story.setPercent(bar.getProgress());
+            db.saveOrUpdate(story);
+        } catch (DbException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setBarProgress(int line) {
+        bar.setProgress((int) ((line * 1d / lines) * 100));
+    }
+
+    private void scroll() {
+        if (currentTopLine > 0) {
+            content.post(new Runnable() {
+                @Override
+                public void run() {
+                    //int y = content.getLayout().getLineTop(currentTopLine);
+                    int y = currentTopLine * lineHeight;
+                    Log.e(TAG, "run: " + y);
+                    scrollView.smoothScrollTo(0, y);
+                }
+            });
+
+        }
+    }
+
+
 
     private void collectionOrNot(View view) {
 

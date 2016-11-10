@@ -13,7 +13,7 @@ import java.util.Locale;
 public class DateUtils {
 
     public static String dateToString(Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:dd", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
         return sdf.format(date);
     }
 

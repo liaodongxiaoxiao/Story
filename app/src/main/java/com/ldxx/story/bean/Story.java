@@ -6,7 +6,8 @@ import org.xutils.db.annotation.Table;
 import java.util.Date;
 
 /**
- * Created by wangzhuo-neu on 2016/9/12.
+ * Created by wangzhuo-neu
+ * on 2016/9/12.
  */
 @Table(name = "story")
 public class Story {
@@ -17,11 +18,16 @@ public class Story {
     @Column(name = "content")
     private String content;
     @Column(name = "date_time")
-    private String date_time;
+    private Date date_time;
     @Column(name = "favorite_flag")
     private String favorite_flag;
     @Column(name = "favorite_time")
     private Date favorite_time;
+
+    @Column(name = "top_line")
+    private int top_line;
+    @Column(name = "percent")
+    private int percent;
 
     public String getPid() {
         return pid;
@@ -47,11 +53,11 @@ public class Story {
         this.content = content;
     }
 
-    public String getDate_time() {
+    public Date getDate_time() {
         return date_time;
     }
 
-    public void setDate_time(String date_time) {
+    public void setDate_time(Date date_time) {
         this.date_time = date_time;
     }
 
@@ -69,5 +75,21 @@ public class Story {
 
     public void setFavorite_time(Date favorite_time) {
         this.favorite_time = favorite_time;
+    }
+
+    public int getTop_line() {
+        return top_line;
+    }
+
+    public void setTop_line(int top_line) {
+        this.top_line = top_line;
+    }
+
+    public int getPercent() {
+        return percent;
+    }
+
+    public void setPercent(int percent) {
+        this.percent = percent;
     }
 }

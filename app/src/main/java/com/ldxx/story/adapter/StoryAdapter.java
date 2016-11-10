@@ -1,10 +1,10 @@
 package com.ldxx.story.adapter;
 
 import com.chad.library.adapter.base.BaseItemDraggableAdapter;
-import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.ldxx.story.R;
 import com.ldxx.story.bean.Story;
+import com.ldxx.story.utils.DateUtils;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class StoryAdapter extends BaseItemDraggableAdapter<Story> {
     @Override
     protected void convert(BaseViewHolder baseViewHolder, Story story) {
         baseViewHolder.setText(R.id.title, story.getTitle())
-                .setText(R.id.date, story.getDate_time());
+                .setText(R.id.date, DateUtils.dateToString(story.getDate_time()));
     }
 
 }
